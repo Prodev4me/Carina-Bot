@@ -18,6 +18,7 @@ It's custom Base using Openai Chatbot on WhatsApp
  Rename the file `.env.example` to `.env` and fill the missing fields
 
  ```env
+ NAME=YOUR_BOT_NAME
  OPENAI_KEY=YOUR_OPENAI_KEY
  URI=YOUR_CLUSTER_URI
  MODS=BOT_ADMINS_NUMBER (should be seperated by a comma and a space)
