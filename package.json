@@ -1,0 +1,37 @@
+{
+  "name": "carina",
+  "version": "1.0.0",
+  "description": "AI chatGPT WhatsApp bot",
+  "author": "Alι_Aryαɴ",
+  "main": "src/carina.js",
+  "keywords": [
+    "Carina",
+    "AI",
+    "Assistant"
+  ],
+  "license": "ISC",
+  "scripts": {
+    "format": "prettier --write --config .prettierrc.json \"src/**/*.js\"",
+    "start": "node --optimize_for_size --max_old_space_size=460 src/carina.js"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.4.0",
+    "axios": "^1.4.0",
+    "chalk": "4.1.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "form-data": "^4.0.0",
+    "fs-extra": "^11.1.1",
+    "google-it": "^1.6.4",
+    "linkifyjs": "^4.1.1",
+    "openai": "^3.3.0",
+    "path": "^0.12.7",
+    "pino": "^8.15.0",
+    "qr-image": "^3.2.0",
+    "qrcode-terminal": "^0.12.0",
+    "quick.db": "^9.1.7",
+    "quickmongo": "^5.2.0",
+    "wikipedia": "^2.1.0"
+  }
+}
