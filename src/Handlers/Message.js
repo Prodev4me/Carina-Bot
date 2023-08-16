@@ -5,16 +5,15 @@ const { search, summary } = require('wikipedia')
 const FormData = require('form-data')
 const googleit = require('google-it')
 const axios = require('axios')
+const currentUTCTime = new Date().toUTCString()
 
 let helper = ''
-let name = ''
 
 module.exports = async ({ messages }, client) => {
     try {
         const M = serialize(JSON.parse(JSON.stringify(messages[0])), client)
         let { isGroup, sender, from, body } = M
         if (!M.message || ['protocolMessage', 'senderKeyDistributionMessage'].includes(M.type) || !M.type) return null
-        name = M.pushName || 'User'
         const subject = isGroup ? (await client.groupMetadata(from)).subject : ''
         if (body.startsWith('!eval')) {
             if (!client.mods.includes(M.sender)) return void null
@@ -73,8 +72,11 @@ module.exports = async ({ messages }, client) => {
             if (type.google) {
                 helper = await google(type.google)
                 await M.reply('👩🏻🔎🌐')
+            } else if (type.time) {
+                helper = await getCountryTime(type?.time)
+                await M.reply('👩🏻🔍☀️🌡')
             } else if (type.weather) {
-                helper = await weather(type.weather)
+                helper = await weather(type?.weather)
                 await M.reply('👩🏻🔍☀️🌡')
             } else if (type.wikipedia) {
                 helper = await wikipedia(type.wikipedia)
@@ -82,7 +84,7 @@ module.exports = async ({ messages }, client) => {
             }
             return void await chatGPT(M, client, body)
         }
-        client.log(`~Message from ${name} in ${isGroup ? subject : 'DM'}`, 'yellow')
+        client.log(`~Message from ${M.pushName || 'User'} in ${isGroup ? subject : 'DM'}`, 'yellow')
     } catch (err) {
         client.log(err, 'red')
     }
@@ -98,19 +100,28 @@ const analysisMessage = async (M, client, context) => {
             messages: [
                 {
                     role: 'system',
-                    content: `analysis up coming messages, remember I have 3 features (google search, weather, wikipedia details), so when a message is about that you need to extract it
-e.g: 
-Can you tell me weather info of today weather of in Lahore?
-note: weather can only take city name
+                    content: `analysis up coming messages, remember You have 4 features (current time, google search, weather, wikipedia details), so when a message is about that you need to extract it
+e.g:
+To Get current time & date info of (Country/City)
+Q: Can you tell current time of Pakistan?
+Note: it'll take country/city
+return { "time": "Pakistan" }
+
+To Get information related to weather, 
+Q: Can you tell info about today weather in Lahore?
+Note: it'll take country/city
 return { "weather": "Lahore" }
 
-Can you search on Google about  current exchange rate between Pakistan and USA?
+To Get information which you don't know,
+Q: Can you tell about current exchange rate between Pakistan and USA?
 return { "google": "current exchange rate between Pakistan and USA" }
 
-Can you give me details of Rent-A-Girlfriend from wikipedia?
-return { "wikipedia": "Rent-A-Girlfriend" }
+To get deep details of a word, character, specific personality,
+Q: Can you give me details of Langchain?
+return { "wikipedia": "Langchain" }
 
-Incase, it's a simple message like: "hi", "dm", "well", "weeb", or anything else you must
+For normal discussion topics related to chatting,
+Incase, it's a simple message like: "hi", "dm", "well", "weeb", or anything else
 return { "normal": null }`
                 },
                 {
@@ -166,11 +177,19 @@ const google = async (query) => {
     return text
 }
 
+const getCountryTime = async (query) => {
+  const data = await fetch(`https://weeb-api.vercel.app/timeinfo?query=${query}&key=Baka`)
+    if (data?.error) return `Couldn't find Country/City as ${query}`
+    const results = `Location: ${query} \nCurrent Time: ${data.currentTime}, Current Date: ${data.currentDate}\n`
+  return results
+}
+
 const weather = async (query) => {
+  try {
     const results = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?q=${query}&units=metric&appid=e409825a497a0c894d2dd975542234b0&language=tr`
     )
-    if (results.message) return `Couldn't find that City`
+    if (results.message) return `Couldn't find Country/City as ${query}`
     const { sys, name, main, wind, clouds } = results
     const sunrise = new Date(sys.sunrise * 1000).toLocaleTimeString()
     const sunset = new Date(sys.sunset * 1000).toLocaleTimeString()
@@ -185,6 +204,10 @@ Sunrise: ${sunrise}, Sunset: ${sunset}
 Weather Description: ${weatherDescription}
 `
     return text
+  } catch (error) {
+    console.error(error.message)
+    return 'Unable To Find Country/City'
+  }
 }
 
 const chatGPT = async (M, client, context) => {
@@ -205,10 +228,10 @@ When faced with ambiguous or unclear queries, seek clarification. If unable to a
             })
         messages.push({
             role: 'user',
-            content: `Userinfo: ${name} \nMessage: ${context.trim()} ${helper}`
+            content: `UTC: ${currentUTCTime} \nUserinfo: ${M.pushName || 'User'} \nMessage: ${context.trim()} ${helper}`
         })
         const response = await ai.createChatCompletion({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-3.5-turbo-16k',
             messages,
             max_tokens: 4096
         })
@@ -217,7 +240,8 @@ When faced with ambiguous or unclear queries, seek clarification. If unable to a
         if (messages.length === 30) messages.shift()
         messages.push(res)
         messagesMap.set(M.from, messages)
-        await M.reply(res.content)
+        const text = res.content.replace(new RegExp(`^${client.name}: `), '');
+        await M.reply(text)
     } catch (error) {
         console.log(error.message)
         return void (await M.reply(
