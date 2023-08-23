@@ -116,7 +116,7 @@ To Get information which you don't know,
 Q: Can you tell about current exchange rate between Pakistan and USA?
 return { "google": "current exchange rate between Pakistan and USA" }
 
-To get deep details of a word, character, specific personality,
+To get deep details of a word, character, specific personality that can be found in wikipedia,
 Q: Can you give me details of Langchain?
 return { "wikipedia": "Langchain" }
 
@@ -231,13 +231,13 @@ When faced with ambiguous or unclear queries, seek clarification. If unable to a
             content: `UTC: ${currentUTCTime} \nUserinfo: ${M.pushName || 'User'} \nMessage: ${context.trim()} ${helper}`
         })
         const response = await ai.createChatCompletion({
-            model: 'gpt-3.5-turbo-16k',
+            model: 'gpt-3.5-turbo',
             messages,
             max_tokens: 4096
         })
         const res = response.data.choices[0]?.message
         if (!res) return void M.reply('An error occurred')
-        if (messages.length === 30) messages.shift()
+        if (messages.length === 15) messages.shift()
         messages.push(res)
         messagesMap.set(M.from, messages)
         const text = res.content.replace(new RegExp(`^${client.name}: `), '');
