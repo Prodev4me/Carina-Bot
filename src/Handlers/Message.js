@@ -231,7 +231,7 @@ When faced with ambiguous or unclear queries, seek clarification. If unable to a
             content: `UTC: ${currentUTCTime} \nUserinfo: ${M.pushName || 'User'} \nMessage: ${context.trim()} ${helper}`
         })
         const response = await ai.createChatCompletion({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-3.5-turbo-16K',
             messages,
             max_tokens: 4096
         })
