@@ -237,7 +237,7 @@ When faced with ambiguous or unclear queries, seek clarification. If unable to a
         })
         const res = response.data.choices[0]?.message
         if (!res) return void M.reply('An error occurred')
-        if (messages.length === 15) messages.shift()
+        if (messages.length === 30) messages.shift()
         messages.push(res)
         messagesMap.set(M.from, messages)
         const text = res.content.replace(new RegExp(`^${client.name}: `), '');
